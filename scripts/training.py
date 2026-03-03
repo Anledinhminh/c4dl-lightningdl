@@ -375,7 +375,12 @@ def setup_batch_gen(file_dir, file_suffix="2020", primary="RZC",
     return batch_gen
 
 
-def build_ensemble_model(batch_gen, dropout=True):
+def build_ensemble_model(batch_gen, dropout=True, model_dir=None):
+    if model_dir is None:
+        model_dir = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "..", "models")
+        )
+
     def create_model(init_strategy=False):
         return models.init_model(batch_gen, 
             init_strategy=init_strategy,
@@ -389,17 +394,19 @@ def build_ensemble_model(batch_gen, dropout=True):
 
     ind_models = [model1, model2, model3]
     if dropout:
-        weight_files = [
-            "../models/lightning_dropout_weightdecay_noclassweight.h5",
-            "../models/lightning_dropout_weightdecay_noclassweight2.h5",
-            "../models/lightning_dropout_weightdecay_noclassweight3.h5",
+        weight_basenames = [
+            "lightning_dropout_weightdecay_noclassweight.h5",
+            "lightning_dropout_weightdecay_noclassweight2.h5",
+            "lightning_dropout_weightdecay_noclassweight3.h5",
         ]
     else:
-        weight_files = [
-            "../models/lightning_noclassweight1.h5",
-            "../models/lightning_noclassweight2.h5",
-            "../models/lightning_noclassweight3.h5",
+        weight_basenames = [
+            "lightning_noclassweight1.h5",
+            "lightning_noclassweight2.h5",
+            "lightning_noclassweight3.h5",
         ]
+
+    weight_files = [os.path.join(model_dir, fn) for fn in weight_basenames]
 
     for (m,w) in zip(ind_models, weight_files):
         m.load_weights(w)
